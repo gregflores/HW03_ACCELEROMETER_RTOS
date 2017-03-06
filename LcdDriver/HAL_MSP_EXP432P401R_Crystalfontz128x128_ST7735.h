@@ -43,6 +43,7 @@
 
 #include <stdint.h>
 #include "driverlib.h"
+#include "ShortPause.h"
 //*****************************************************************************
 //
 // User Configuration for the LCD Driver
@@ -90,6 +91,10 @@ extern void HAL_LCD_SpiInit(void);
 void SysCtlDelay(uint32_t);
 #endif
 
+#if 0
 #define HAL_LCD_delay(x)      __delay_cycles(x * 48)
+#else
+#define HAL_LCD_delay(x)	pauseUS(x/10)
+#endif
 
 #endif /* HAL_MSP_EXP432P401R_CRYSTALFONTZ128X128_ST7735_H_ */

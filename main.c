@@ -47,6 +47,12 @@
 /* Example/Board Header files */
 #include "Board.h"
 
+
+#include <grlib.h>
+#include "LcdDriver/Crystalfontz128x128_ST7735.h"
+
+Graphics_Context g_sContext;
+
 /* ADC sample count */
 #define ADC_SAMPLE_COUNT  (10)
 
@@ -66,6 +72,8 @@ Char task2Stack[TASKSTACKSIZE];
 uint16_t adcValue0;
 uint16_t adcValue1;
 uint16_t adcValue2;
+
+void drawTitle(void);
 
 /*
  *  ======== taskFxn0 ========
@@ -185,7 +193,8 @@ int main(void)
     /* Call board init functions */
     Board_initGeneral();
     Board_initADC();
-
+    Board_initGPIO();
+    Board_initSPI();
     /* Create tasks */
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
@@ -208,7 +217,30 @@ int main(void)
     /* SysMin will only print to the console when you call flush or exit */
     System_flush();
 
+    Crystalfontz128x128_Init();
+    Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
+
+    /* Initializes graphics context */
+    Graphics_initContext(&g_sContext, &g_sCrystalfontz128x128);
+    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_RED);
+    Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
+    GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
+    drawTitle();
+
+
     BIOS_start();
 
     return (0);
+}
+
+void drawTitle()
+{
+    Graphics_clearDisplay(&g_sContext);
+    Graphics_drawStringCentered(&g_sContext,
+                                    "Accelerometer:",
+                                    AUTO_STRING_LENGTH,
+                                    64,
+                                    30,
+                                    OPAQUE_TEXT);
+
 }

@@ -16,7 +16,7 @@ BIOS_INC  = -I"C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/bios_6_46_0
 
 TARGET_INC = -I"C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/bios_6_46_00_23/packages/"
 
-INCS = $(BIOS_INC) $(TARGET_INC)  --include_path="C:/ti/ccsv6/ccs_base/arm/include" --include_path="C:/ti/ccsv6/ccs_base/arm/include/CMSIS" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/inc/CMSIS" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/inc" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/driverlib/MSP432P4xx" --include_path="C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include" 
+INCS = $(BIOS_INC) $(TARGET_INC)  --include_path="C:/ti/ccsv6/ccs_base/arm/include" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS/GrLib/grlib" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS/GrLib/fonts" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS/LcdDriver" --include_path="C:/ti/ccsv6/ccs_base/arm/include/CMSIS" --include_path="C:/Users/flore/Documents/Workspace CCD/HW03_ACCELEROMETER_RTOS" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/inc/CMSIS" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/inc" --include_path="C:/ti/tirex-content/tirtos_msp43x_2_20_00_06/products/msp432_driverlib_3_21_00_05/driverlib/MSP432P4xx" --include_path="C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include" 
 
 CC = C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/bin/armcl -c $(CCOPTS) -I C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include
 ASM = C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/bin/armcl -c $(CCOPTS) -I C:/ti/ccsv6/tools/compiler/ti-cgt-arm_16.12.0.STS/include
@@ -53,7 +53,7 @@ m3_TaskSupport_asm.obj: family/arm/m3/TaskSupport_asm.sv7M makefile
 	$(ASSEMBLE) --output_file=m3_TaskSupport_asm.obj
 
 
-BIOS.obj: BIOS.c knl/Clock.c knl/Idle.c knl/Intrinsics.c knl/Queue.c knl/Semaphore.c knl/Swi.c knl/Swi_andn.c knl/Task.c hal/Hwi.c hal/Hwi_stack.c hal/Hwi_startup.c family/arm/msp432/init/Boot.c family/arm/m3/Hwi.c family/arm/m3/TaskSupport.c gates/GateHwi.c gates/GateMutex.c heaps/HeapMem.c family/arm/msp432/Timer.c family/arm/msp432/ClockFreqs.c makefile
+BIOS.obj: BIOS.c knl/Clock.c knl/Idle.c knl/Intrinsics.c knl/Queue.c knl/Semaphore.c knl/Swi.c knl/Swi_andn.c knl/Task.c gates/GateHwi.c gates/GateMutexPri.c gates/GateMutex.c hal/Hwi.c hal/Hwi_stack.c hal/Hwi_startup.c family/arm/msp432/init/Boot.c family/arm/m3/Hwi.c family/arm/m3/TaskSupport.c heaps/HeapMem.c family/arm/msp432/Timer.c family/arm/msp432/ClockFreqs.c makefile
 	@-$(call RM, $@)
 	@echo clem4f $< ...
 	@$(CC) $(BIOS_DEFS) $(XOPTS) $(INCS) \
@@ -66,14 +66,15 @@ BIOS.obj: BIOS.c knl/Clock.c knl/Idle.c knl/Intrinsics.c knl/Queue.c knl/Semapho
 	$(BIOS_ROOT)knl/Swi.c \
 	$(BIOS_ROOT)knl/Swi_andn.c \
 	$(BIOS_ROOT)knl/Task.c \
+	$(BIOS_ROOT)gates/GateHwi.c \
+	$(BIOS_ROOT)gates/GateMutexPri.c \
+	$(BIOS_ROOT)gates/GateMutex.c \
 	$(BIOS_ROOT)hal/Hwi.c \
 	$(BIOS_ROOT)hal/Hwi_stack.c \
 	$(BIOS_ROOT)hal/Hwi_startup.c \
 	$(BIOS_ROOT)family/arm/msp432/init/Boot.c \
 	$(BIOS_ROOT)family/arm/m3/Hwi.c \
 	$(BIOS_ROOT)family/arm/m3/TaskSupport.c \
-	$(BIOS_ROOT)gates/GateHwi.c \
-	$(BIOS_ROOT)gates/GateMutex.c \
 	$(BIOS_ROOT)heaps/HeapMem.c \
 	$(BIOS_ROOT)family/arm/msp432/Timer.c \
 	$(BIOS_ROOT)family/arm/msp432/ClockFreqs.c \

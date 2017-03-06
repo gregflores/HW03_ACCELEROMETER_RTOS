@@ -209,6 +209,13 @@ GPIO_PinConfig gpioPinConfigs[] = {
     /* MSP_EXP432P401R_LED_RED */
     GPIOMSP432_P2_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_LOW,
 
+	/* EDUMKII_LCD_RST */
+	GPIOMSP432_P5_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+	/* EDUMKII_LCD_RS */
+	GPIOMSP432_P3_7 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH,
+	/* EDUMKII_LCD_CS */
+	GPIOMSP432_P5_0 | GPIO_CFG_OUT_STD | GPIO_CFG_OUT_STR_HIGH | GPIO_CFG_OUT_HIGH
+
     /*
      * MSP_EXP432P401R_LED_GREEN & MSP_EXP432P401R_LED_BLUE are used for
      * PWM examples.  Uncomment the following lines if you would like to control
@@ -460,7 +467,9 @@ const SPIMSP432DMA_HWAttrs spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPICOUNT] = {
         .intPriority = (~0),
         .rxDMAChannelIndex = DMA_CH1_EUSCIB0RX0,
         .txDMAChannelIndex = DMA_CH0_EUSCIB0TX0
-    },
+    }
+#if 0
+    ,
     {
         .baseAddr = EUSCI_B2_BASE,
         .bitOrder = EUSCI_B_SPI_MSB_FIRST,
@@ -473,6 +482,7 @@ const SPIMSP432DMA_HWAttrs spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPICOUNT] = {
         .rxDMAChannelIndex = DMA_CH5_EUSCIB2RX0,
         .txDMAChannelIndex = DMA_CH4_EUSCIB2TX0
     }
+#endif
 };
 
 const SPI_Config SPI_config[] = {

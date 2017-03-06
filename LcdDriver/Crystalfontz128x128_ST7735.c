@@ -41,6 +41,8 @@
 #include <driverlib.h>
 #include <HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h>
 #include <stdint.h>
+#include "board.h"
+#include <ti/drivers/GPIO.h>
 
 uint8_t Lcd_Orientation;
 uint16_t Lcd_ScreenWidth, Lcd_ScreenHeigth;
@@ -62,9 +64,9 @@ void Crystalfontz128x128_Init(void)
     HAL_LCD_PortInit();
     HAL_LCD_SpiInit();
 
-    GPIO_setOutputLowOnPin(LCD_RST_PORT, LCD_RST_PIN);
+    GPIO_write(EDUMKII_RST,0);
     HAL_LCD_delay(50);
-    GPIO_setOutputHighOnPin(LCD_RST_PORT, LCD_RST_PIN);
+    GPIO_write(EDUMKII_RST,1);
     HAL_LCD_delay(120);
 
     HAL_LCD_writeCommand(CM_SLPOUT);

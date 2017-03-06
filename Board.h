@@ -62,6 +62,9 @@ extern "C" {
 #define Board_LED0                  MSP_EXP432P401R_LED1
 #define Board_LED1                  MSP_EXP432P401R_LED_RED
 #define Board_LED2                  MSP_EXP432P401R_LED_RED
+#define EDUMKII_RST 				EDUMKII_LCD_RST
+#define EDUMKII_RS	 				EDUMKII_LCD_RS
+#define EDUMKII_CS 					EDUMKII_LCD_CS
 
 /*
  * MSP_EXP432P401R_LED_GREEN & MSP_EXP432P401R_LED_BLUE are used for
