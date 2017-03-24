@@ -1,36 +1,4 @@
 /*
- * Copyright (c) 2016, Texas Instruments Incorporated
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- *
- * *  Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- *
- * *  Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * *  Neither the name of Texas Instruments Incorporated nor the names of
- *    its contributors may be used to endorse or promote products derived
- *    from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
- * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS;
- * OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
- * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
-/*
  *  ======== adcsinglechannel.c ========
  */
 /* XDCtools Header files */
@@ -47,7 +15,7 @@
 /* Example/Board Header files */
 #include "Board.h"
 #include <stdio.h>
-
+#include <math.h>
 
 #include <grlib.h>
 #include "LcdDriver/Crystalfontz128x128_ST7735.h"
@@ -75,13 +43,64 @@ Char task3Stack[TASKSTACKSIZE];
 uint16_t adcValue0;
 uint16_t adcValue1;
 uint16_t adcValue2;
+
 float adcFloat0;
 float adcFloat1;
 float adcFloat2;
 
+uint8_t s1Flag;
+float s1Float0;
+float s1Float1;
+float s1Float2;
+float s1V;
+float s1A;
+float s1B;
+
+uint8_t s2Flag;
+float s2Float0;
+float s2Float1;
+float s2Float2;
+float s2V;
+float s2A;
+float s2B;
 
 void drawTitle(void);
 
+void gpioButtonFxn0(unsigned int index)
+{
+	if(s1Flag == 0)
+	{
+		s1Flag = 1;
+		/* Clear the GPIO interrupt and toggle an LED */
+		s1Float0 = adcFloat0;
+		s1Float1 = adcFloat1;
+		s1Float2 = adcFloat2;
+		GPIO_toggle(Board_LED0);
+	}
+	else if(s1Flag == 2)
+	{
+		s1Flag = 3;
+		GPIO_toggle(Board_LED0);
+	}
+}
+
+void gpioButtonFxn1(unsigned int index)
+{
+	if(s2Flag == 0)
+	{
+		s2Flag = 1;
+		/* Clear the GPIO interrupt and toggle an LED */
+		s2Float0 = adcFloat0;
+		s2Float1 = adcFloat1;
+		s2Float2 = adcFloat2;
+		GPIO_toggle(Board_LED1);
+	}
+	else if(s2Flag == 2)
+	{
+		s2Flag = 3;
+		GPIO_toggle(Board_LED1);
+	}
+}
 
 void lcdFxn0(UArg arg0, UArg arg1)
 {
@@ -96,30 +115,131 @@ void lcdFxn0(UArg arg0, UArg arg1)
     drawTitle();
     while(1)
     {
-    	GPIO_toggle(Board_LED1);
     	Task_sleep(100);
 	    char string[8];
 	    sprintf(string, "X: %.3f", adcFloat0);
 	    Graphics_drawStringCentered(&g_sContext,
 	                                    (int8_t *)string,
 	                                    8,
-	                                    64,
-	                                    50,
+	                                    28,
+	                                    20,
 	                                    OPAQUE_TEXT);
 	    sprintf(string, "Y: %.3f", adcFloat1);
 	    Graphics_drawStringCentered(&g_sContext,
 	                                    (int8_t *)string,
 	                                    8,
-	                                    64,
-	                                    60,
+	                                    28,
+	                                    30,
 	                                    OPAQUE_TEXT);
 	    sprintf(string, "Z: %.3f", adcFloat2);
 	    Graphics_drawStringCentered(&g_sContext,
 	                                    (int8_t *)string,
 	                                    8,
-	                                    64,
-	                                    70,
+	                                    28,
+	                                    40,
 	                                    OPAQUE_TEXT);
+	    if(s1Flag == 1)
+	    {
+	    	s1V = sqrt(s1Float0*s1Float0 + s1Float1*s1Float1 + s1Float2*s1Float2);
+	    	s1A = atan2(s1Float1, s1Float0);
+	    	s1B = atan2(s1Float2, s1Float1);
+		    char string[8];
+		    sprintf(string, "v: %.3f", s1V);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    60,
+		                                    OPAQUE_TEXT);
+		    sprintf(string, "a: %.3f", s1A);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    70,
+		                                    OPAQUE_TEXT);
+		    sprintf(string, "b: %.3f", s1B);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    80,
+		                                    OPAQUE_TEXT);
+		    s1Flag = 2;
+	    }
+	    else if (s1Flag == 3)
+	    {
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        60,
+	                                        OPAQUE_TEXT);
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        70,
+	                                        OPAQUE_TEXT);
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        80,
+	                                        OPAQUE_TEXT);
+	        s1Flag = 0;
+	    }
+	    if(s2Flag == 1)
+	    {
+	    	s2V = sqrt(s2Float0*s2Float0 + s2Float1*s2Float1 + s2Float2*s2Float2);
+	    	s2A = atan2(s2Float1, s2Float0);
+	    	s2B = atan2(s2Float2, s2Float1);
+		    char string[8];
+		    sprintf(string, "v: %.3f", s2V);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    100,
+		                                    OPAQUE_TEXT);
+		    sprintf(string, "a: %.3f", s2A);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    110,
+		                                    OPAQUE_TEXT);
+		    sprintf(string, "b: %.3f", s2B);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    28,
+		                                    120,
+		                                    OPAQUE_TEXT);
+		    s2Flag = 2;
+	    }
+	    else if (s2Flag == 3)
+	    {
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        100,
+	                                        OPAQUE_TEXT);
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        110,
+	                                        OPAQUE_TEXT);
+	        Graphics_drawStringCentered(&g_sContext,
+	                                        "        ",
+	                                        AUTO_STRING_LENGTH,
+	                                        28,
+	                                        120,
+	                                        OPAQUE_TEXT);
+	        s2Flag = 0;
+	    }
     }
 }
 
@@ -141,7 +261,7 @@ Void taskFxn0(UArg arg0, UArg arg1)
 	}
 	while(1)
 	{
-		Task_sleep(200);
+		Task_sleep(40);
 
 
 	    switch(arg0)
@@ -152,7 +272,6 @@ Void taskFxn0(UArg arg0, UArg arg1)
 
 			if (res == ADC_STATUS_SUCCESS) {
 				adcFloat0 = 0.000231*(float)adcValue0 - 2.5;
-				System_printf("x: %f\n", adcFloat0);
 			}
 			else {
 				System_printf("ADC X convert failed\n");
@@ -165,7 +284,6 @@ Void taskFxn0(UArg arg0, UArg arg1)
 
 			if (res == ADC_STATUS_SUCCESS) {
 				adcFloat1 = 0.000231*(float)adcValue1 - 2.5;
-				System_printf("y: %f\n", adcFloat1);
 			}
 			else {
 				System_printf("ADC Y convert failed\n");
@@ -178,7 +296,6 @@ Void taskFxn0(UArg arg0, UArg arg1)
 
 			if (res == ADC_STATUS_SUCCESS) {
 				adcFloat2 = 0.000231*(float)adcValue2 - 2.5;
-				System_printf("z: %f\n", adcFloat2);
 			}
 			else {
 				System_printf("ADC Z convert failed\n");
@@ -240,7 +357,17 @@ int main(void)
     System_flush();
     GPIO_write(Board_LED0, Board_LED_OFF);
 
+    /* install Button callback */
+    GPIO_setCallback(EDUMKII_B1, gpioButtonFxn0);
 
+    /* Enable interrupts */
+    GPIO_enableInt(EDUMKII_B1);
+
+    /* install Button callback */
+    GPIO_setCallback(EDUMKII_B2, gpioButtonFxn1);
+
+    /* Enable interrupts */
+    GPIO_enableInt(EDUMKII_B2);
 
     BIOS_start();
 
@@ -251,10 +378,21 @@ void drawTitle()
 {
     Graphics_clearDisplay(&g_sContext);
     Graphics_drawStringCentered(&g_sContext,
-                                    "Accelerometer:",
+                                    "Accel:",
                                     AUTO_STRING_LENGTH,
-                                    64,
-                                    30,
+                                    20,
+                                    10,
                                     OPAQUE_TEXT);
-
+    Graphics_drawStringCentered(&g_sContext,
+                                    "S1",
+                                    AUTO_STRING_LENGTH,
+                                    8,
+                                    50,
+                                    OPAQUE_TEXT);
+    Graphics_drawStringCentered(&g_sContext,
+                                     "S2",
+                                     AUTO_STRING_LENGTH,
+                                     8,
+                                     90,
+                                     OPAQUE_TEXT);
 }
