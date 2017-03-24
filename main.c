@@ -1,5 +1,14 @@
 /*
- *  ======== adcsinglechannel.c ========
+ * Texas A&M University
+ * 	Electronic Systems Engineering Technology
+ * 	ENTC-489 Embedded Real Time Software Development
+ * 	Author: Gregorio Flores & Adrian Morales
+ * 	File: main.c
+ * 	--------
+ *	Main program for HW03_ACCELEROMETER_RTOS
+ *	This file takes care of all the functionality for the assignment.
+ *	This includes the button interrupt tasks, the lcd update task, and the adc convert tasks.
+ *	The main function takes care of all the initialization for the MSP432.
  */
 /* XDCtools Header files */
 #include <xdc/std.h>
@@ -16,14 +25,11 @@
 #include "Board.h"
 #include <stdio.h>
 #include <math.h>
-
+/* LCD and Graphic Library files */
 #include <grlib.h>
 #include "LcdDriver/Crystalfontz128x128_ST7735.h"
-
+/* Initializes the graphics context */
 Graphics_Context g_sContext;
-
-/* ADC sample count */
-#define ADC_SAMPLE_COUNT  (10)
 
 /*Task Specific defines */
 #define TASKSTACKSIZE     (1024)
@@ -39,15 +45,18 @@ Char task2Stack[TASKSTACKSIZE];
 
 Task_Struct task3Struct;
 Char task3Stack[TASKSTACKSIZE];
+
 /* ADC conversion result variables */
 uint16_t adcValue0;
 uint16_t adcValue1;
 uint16_t adcValue2;
 
+/* ADC Converted g values */
 float adcFloat0;
 float adcFloat1;
 float adcFloat2;
 
+/* Switch/Button1 variables */
 uint8_t s1Flag;
 float s1Float0;
 float s1Float1;
@@ -56,6 +65,7 @@ float s1V;
 float s1A;
 float s1B;
 
+/* Switch/Button2 variables */
 uint8_t s2Flag;
 float s2Float0;
 float s2Float1;
@@ -64,14 +74,23 @@ float s2V;
 float s2A;
 float s2B;
 
+/* Function Definitions */
 void drawTitle(void);
 
+/*
+ *  ======== gpioButtonFxn0 ========
+ *  This is the interrupt for the first button. When the button is initially pressed
+ *  there is a check on the flag. Initially the flag is 0 and will capture the current
+ *  accelerometer values. An LED also toggles on to show the user the press was successful.
+ *  The flag is also set to the next state. The function also checks if the flag is set to
+ *  2. If it is, it will increment the flag to the next state and toggle the LED off.
+ *  This is done to clear the screen in the lcd task.
+ */
 void gpioButtonFxn0(unsigned int index)
 {
 	if(s1Flag == 0)
 	{
 		s1Flag = 1;
-		/* Clear the GPIO interrupt and toggle an LED */
 		s1Float0 = adcFloat0;
 		s1Float1 = adcFloat1;
 		s1Float2 = adcFloat2;
@@ -82,8 +101,12 @@ void gpioButtonFxn0(unsigned int index)
 		s1Flag = 3;
 		GPIO_toggle(Board_LED0);
 	}
-}
+} /* gpioButtonFxn */
 
+/*
+ *  ======== gpioButtonFxn1 ========
+ *  This is the interrupt for the second button. It functions in the same way as the first.
+ */
 void gpioButtonFxn1(unsigned int index)
 {
 	if(s2Flag == 0)
@@ -100,19 +123,32 @@ void gpioButtonFxn1(unsigned int index)
 		s2Flag = 3;
 		GPIO_toggle(Board_LED1);
 	}
-}
+} /* gpioButtonFxn */
 
+/*
+ *  ======== lcdFxn0 ========
+ *  This is the LCD RTOS task. It initializes the LCD using the RTOS modified functions.
+ *  It then draws the initial labels Accel:, S1, and S2.
+ *  The task begins drawing the X,Y, and Z, accelerometer data.
+ *  There are then checks for the button flags that determine whether or not the values are
+ *  locked in and drawn in their respective position. Ther is also a check to clear these values
+ *  when the button is pressed again. I am pretty sure I injured my finger typing this out.
+ */
 void lcdFxn0(UArg arg0, UArg arg1)
 {
     Crystalfontz128x128_Init();
     Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
-
     /* Initializes graphics context */
     Graphics_initContext(&g_sContext, &g_sCrystalfontz128x128);
     Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_RED);
     Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
     GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
     drawTitle();
+    /*
+     * The start of the display updating. The update takes place every 500 ms.
+     * Here the adcFloat values are converted to strings with up to 3
+     * decimal places. These strings are then written to the LCD. They are all left oriented.
+     */
     while(1)
     {
     	Task_sleep(100);
@@ -138,6 +174,10 @@ void lcdFxn0(UArg arg0, UArg arg1)
 	                                    28,
 	                                    40,
 	                                    OPAQUE_TEXT);
+	    /*
+	     * Here the button flag is checked and if set to 1, the vector and angle conversion takes place on the captured values.
+	     * This is then converted to a string and printed to the LCD.
+	     */
 	    if(s1Flag == 1)
 	    {
 	    	s1V = sqrt(s1Float0*s1Float0 + s1Float1*s1Float1 + s1Float2*s1Float2);
@@ -167,6 +207,10 @@ void lcdFxn0(UArg arg0, UArg arg1)
 		                                    OPAQUE_TEXT);
 		    s1Flag = 2;
 	    }
+	    /*
+	     * Here there is a check if the button has been pressed a second time. If so The lines where
+	     * the V, A, and B, values were printed is cleared.
+	     */
 	    else if (s1Flag == 3)
 	    {
 	        Graphics_drawStringCentered(&g_sContext,
@@ -241,11 +285,11 @@ void lcdFxn0(UArg arg0, UArg arg1)
 	        s2Flag = 0;
 	    }
     }
-}
+} /* lcdFxn0 */
 
 /*
  *  ======== taskFxn0 ========
- *  Open an ADC instance and get a sampling result from a one-shot conversion.
+ *  This task takes care of the ADC initialization and the conversions.
  */
 Void taskFxn0(UArg arg0, UArg arg1)
 {
@@ -259,6 +303,10 @@ Void taskFxn0(UArg arg0, UArg arg1)
 	if (adc == NULL) {
 		System_abort("Error initializing ADC channel\n");
 	}
+
+	/*
+	 * The adc conversions are done at a rate of 5Hz
+	 */
 	while(1)
 	{
 		Task_sleep(40);
@@ -308,7 +356,7 @@ Void taskFxn0(UArg arg0, UArg arg1)
 	    }
 		System_flush();
 	}
-}
+} /* taskFxn0 */
 
 
 /*
@@ -372,8 +420,11 @@ int main(void)
     BIOS_start();
 
     return (0);
-}
+} /* main */
 
+/*
+ *  ======== drawTitle ========
+ */
 void drawTitle()
 {
     Graphics_clearDisplay(&g_sContext);
@@ -395,4 +446,4 @@ void drawTitle()
                                      8,
                                      90,
                                      OPAQUE_TEXT);
-}
+}/* drawTitle */
