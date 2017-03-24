@@ -476,21 +476,7 @@ const SPIMSP432DMA_HWAttrs spiMSP432DMAHWAttrs[MSP_EXP432P401R_SPICOUNT] = {
         .rxDMAChannelIndex = DMA_CH1_EUSCIB0RX0,
         .txDMAChannelIndex = DMA_CH0_EUSCIB0TX0
     }
-#if 0
-    ,
-    {
-        .baseAddr = EUSCI_B2_BASE,
-        .bitOrder = EUSCI_B_SPI_MSB_FIRST,
-        .clockSource = EUSCI_B_SPI_CLOCKSOURCE_SMCLK,
 
-        .defaultTxBufValue = 0,
-
-        .dmaIntNum = INT_DMA_INT2,
-        .intPriority = (~0),
-        .rxDMAChannelIndex = DMA_CH5_EUSCIB2RX0,
-        .txDMAChannelIndex = DMA_CH4_EUSCIB2TX0
-    }
-#endif
 };
 
 const SPI_Config SPI_config[] = {
@@ -499,13 +485,7 @@ const SPI_Config SPI_config[] = {
         .object = &spiMSP432DMAObjects[0],
         .hwAttrs = &spiMSP432DMAHWAttrs[0]
     },
-#if 0
-    {
-        .fxnTablePtr = &SPIMSP432DMA_fxnTable,
-        .object = &spiMSP432DMAObjects[1],
-        .hwAttrs = &spiMSP432DMAHWAttrs[1]
-    },
-#endif
+
     {NULL, NULL, NULL},
 };
 
@@ -525,13 +505,7 @@ void MSP_EXP432P401R_initSPI(void)
         GPIO_PIN5 | GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN7,
         GPIO_PRIMARY_MODULE_FUNCTION);
-#if 0
-    /* Configure CLK, MOSI & MISO for SPI1 (EUSCI_B2) */
-    MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
-        GPIO_PIN5 | GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
-    MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, GPIO_PIN7,
-        GPIO_PRIMARY_MODULE_FUNCTION);
-#endif
+
 
     SPI_init();
 }

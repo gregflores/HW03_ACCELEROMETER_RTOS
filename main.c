@@ -46,6 +46,7 @@
 
 /* Example/Board Header files */
 #include "Board.h"
+#include <stdio.h>
 
 
 #include <grlib.h>
@@ -81,15 +82,28 @@ void drawTitle(void);
  */
 Void taskFxn0(UArg arg0, UArg arg1)
 {
+    Crystalfontz128x128_Init();
+    Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
+
+    /* Initializes graphics context */
+    Graphics_initContext(&g_sContext, &g_sCrystalfontz128x128);
+    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_RED);
+    Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
+    GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
+    drawTitle();
+	ADC_Handle   adc;
+	ADC_Params   params;
+	int_fast16_t res;
+
+	ADC_Params_init(&params);
+	adc = ADC_open(Board_ADC14, &params);
 	while(1)
 	{
 		Task_sleep(200);
-		ADC_Handle   adc;
-		ADC_Params   params;
-		int_fast16_t res;
 
-		ADC_Params_init(&params);
-		adc = ADC_open(Board_ADC14, &params);
+	    char string[8];
+
+
 
 		if (adc == NULL) {
 			System_abort("Error initializing ADC channel 0\n");
@@ -101,12 +115,19 @@ Void taskFxn0(UArg arg0, UArg arg1)
 
 		if (res == ADC_STATUS_SUCCESS) {
 			System_printf("x: %i\n", adcValue0);
+		    sprintf(string, "X: %5d", adcValue0);
+		    Graphics_drawStringCentered(&g_sContext,
+		                                    (int8_t *)string,
+		                                    8,
+		                                    64,
+		                                    50,
+		                                    OPAQUE_TEXT);
 		}
 		else {
 			System_printf("ADC channel 14 convert failed\n");
 		}
 
-		ADC_close(adc);
+		//ADC_close(adc);
 
 		System_flush();
 	}
@@ -117,7 +138,7 @@ Void taskFxn0(UArg arg0, UArg arg1)
  *  Open a ADC handle and get a array of sampling results after
  *  calling several conversions.
  */
-Void taskFxn1(UArg arg0, UArg arg1)
+/*Void taskFxn1(UArg arg0, UArg arg1)
 {
 	while(1)
 	{
@@ -167,7 +188,7 @@ Void taskFxn2(UArg arg0, UArg arg1)
 		}
 
 
-		/* Blocking mode conversion */
+
 		res = ADC_convert(adc, &adcValue0);
 
 		if (res == ADC_STATUS_SUCCESS) {
@@ -182,7 +203,7 @@ Void taskFxn2(UArg arg0, UArg arg1)
 		System_flush();
 	}
 }
-
+*/
 /*
  *  ======== main ========
  */
@@ -195,12 +216,15 @@ int main(void)
     Board_initADC();
     Board_initGPIO();
     Board_initSPI();
+
+
+
     /* Create tasks */
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task0Stack;
     Task_construct(&task0Struct, (Task_FuncPtr)taskFxn0, &taskParams, NULL);
-
+/*
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task1Stack;
@@ -210,22 +234,14 @@ int main(void)
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task2Stack;
     Task_construct(&task2Struct, (Task_FuncPtr)taskFxn2, &taskParams, NULL);
-
+*/
     System_printf("Starting the ADC Single Channel example\nSystem provider is "
         "set to SysMin.  Halt the target to view any SysMin contents in ROV.\n");
 
     /* SysMin will only print to the console when you call flush or exit */
     System_flush();
 
-    Crystalfontz128x128_Init();
-    Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
 
-    /* Initializes graphics context */
-    Graphics_initContext(&g_sContext, &g_sCrystalfontz128x128);
-    Graphics_setForegroundColor(&g_sContext, GRAPHICS_COLOR_RED);
-    Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
-    GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
-    drawTitle();
 
 
     BIOS_start();

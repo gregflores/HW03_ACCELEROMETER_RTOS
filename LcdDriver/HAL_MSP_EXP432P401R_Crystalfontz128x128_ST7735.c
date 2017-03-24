@@ -36,11 +36,12 @@
 //           Crystalfontz128x128 LCD with MSP-EXP432P401R LaunchPad
 //
 //*****************************************************************************
+
+#include "board.h"
+#include <stdint.h>
+#include "driverlib.h"
 #include <HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h>
 #include "grlib.h"
-
-#include <stdint.h>
-#include "board.h"
 
 #include <xdc/runtime/System.h>
 #include <ti/drivers/GPIO.h>
@@ -58,9 +59,15 @@ void HAL_LCD_PortInit(void)
     ST_init();
     SPI_Params_init(&spiInfo);
     spiInfo.bitRate = LCD_SPI_CLOCK_SPEED;
+    spiInfo.transferMode = SPI_MODE_BLOCKING;
+    spiInfo.transferTimeout = SPI_WAIT_FOREVER;
+    spiInfo.transferCallbackFxn = NULL;
+    spiInfo.mode = SPI_MASTER;
+    spiInfo.dataSize = 8;
+    spiInfo.frameFormat = SPI_POL0_PHA0;
 
-    spiPort = SPI_open(Board_SPI0,&spiInfo);
-    if (spiPort == NULL)
+    spiPort = SPI_open(MSP_EXP432P401R_SPIB0, &spiInfo);
+    if (!spiPort)
     {
         System_printf("SPI did not open\n");
         System_flush();
