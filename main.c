@@ -43,7 +43,7 @@
 
 /* Driver Header files */
 #include <ti/drivers/ADC.h>
-
+#include <ti/drivers/GPIO.h>
 /* Example/Board Header files */
 #include "Board.h"
 #include <stdio.h>
@@ -58,7 +58,7 @@ Graphics_Context g_sContext;
 #define ADC_SAMPLE_COUNT  (10)
 
 /*Task Specific defines */
-#define TASKSTACKSIZE     (768)
+#define TASKSTACKSIZE     (1024)
 
 Task_Struct task0Struct;
 Char task0Stack[TASKSTACKSIZE];
@@ -69,18 +69,21 @@ Char task1Stack[TASKSTACKSIZE];
 Task_Struct task2Struct;
 Char task2Stack[TASKSTACKSIZE];
 
+Task_Struct task3Struct;
+Char task3Stack[TASKSTACKSIZE];
 /* ADC conversion result variables */
 uint16_t adcValue0;
 uint16_t adcValue1;
 uint16_t adcValue2;
+float adcFloat0;
+float adcFloat1;
+float adcFloat2;
+
 
 void drawTitle(void);
 
-/*
- *  ======== taskFxn0 ========
- *  Open an ADC instance and get a sampling result from a one-shot conversion.
- */
-Void taskFxn0(UArg arg0, UArg arg1)
+
+void lcdFxn0(UArg arg0, UArg arg1)
 {
     Crystalfontz128x128_Init();
     Crystalfontz128x128_SetOrientation(LCD_ORIENTATION_UP);
@@ -91,119 +94,106 @@ Void taskFxn0(UArg arg0, UArg arg1)
     Graphics_setBackgroundColor(&g_sContext, GRAPHICS_COLOR_WHITE);
     GrContextFontSet(&g_sContext, &g_sFontFixed6x8);
     drawTitle();
+    while(1)
+    {
+    	GPIO_toggle(Board_LED1);
+    	Task_sleep(100);
+	    char string[8];
+	    sprintf(string, "X: %.3f", adcFloat0);
+	    Graphics_drawStringCentered(&g_sContext,
+	                                    (int8_t *)string,
+	                                    8,
+	                                    64,
+	                                    50,
+	                                    OPAQUE_TEXT);
+	    sprintf(string, "Y: %.3f", adcFloat1);
+	    Graphics_drawStringCentered(&g_sContext,
+	                                    (int8_t *)string,
+	                                    8,
+	                                    64,
+	                                    60,
+	                                    OPAQUE_TEXT);
+	    sprintf(string, "Z: %.3f", adcFloat2);
+	    Graphics_drawStringCentered(&g_sContext,
+	                                    (int8_t *)string,
+	                                    8,
+	                                    64,
+	                                    70,
+	                                    OPAQUE_TEXT);
+    }
+}
+
+/*
+ *  ======== taskFxn0 ========
+ *  Open an ADC instance and get a sampling result from a one-shot conversion.
+ */
+Void taskFxn0(UArg arg0, UArg arg1)
+{
+
 	ADC_Handle   adc;
 	ADC_Params   params;
 	int_fast16_t res;
 
 	ADC_Params_init(&params);
-	adc = ADC_open(Board_ADC14, &params);
+	adc = ADC_open(arg0, &params);
+	if (adc == NULL) {
+		System_abort("Error initializing ADC channel\n");
+	}
 	while(1)
 	{
 		Task_sleep(200);
 
-	    char string[8];
 
+	    switch(arg0)
+	    {
+	    case Board_ADC14:
+			/* Blocking mode conversion */
+			res = ADC_convert(adc, &adcValue0);
 
+			if (res == ADC_STATUS_SUCCESS) {
+				adcFloat0 = 0.000231*(float)adcValue0 - 2.5;
+				System_printf("x: %f\n", adcFloat0);
+			}
+			else {
+				System_printf("ADC X convert failed\n");
+			}
+	    	break;
 
-		if (adc == NULL) {
-			System_abort("Error initializing ADC channel 0\n");
-		}
+	    case Board_ADC13:
+			/* Blocking mode conversion */
+			res = ADC_convert(adc, &adcValue1);
 
+			if (res == ADC_STATUS_SUCCESS) {
+				adcFloat1 = 0.000231*(float)adcValue1 - 2.5;
+				System_printf("y: %f\n", adcFloat1);
+			}
+			else {
+				System_printf("ADC Y convert failed\n");
+			}
+	    	break;
 
-		/* Blocking mode conversion */
-		res = ADC_convert(adc, &adcValue0);
+	    case Board_ADC11:
+			/* Blocking mode conversion */
+			res = ADC_convert(adc, &adcValue2);
 
-		if (res == ADC_STATUS_SUCCESS) {
-			System_printf("x: %i\n", adcValue0);
-		    sprintf(string, "X: %5d", adcValue0);
-		    Graphics_drawStringCentered(&g_sContext,
-		                                    (int8_t *)string,
-		                                    8,
-		                                    64,
-		                                    50,
-		                                    OPAQUE_TEXT);
-		}
-		else {
-			System_printf("ADC channel 14 convert failed\n");
-		}
+			if (res == ADC_STATUS_SUCCESS) {
+				adcFloat2 = 0.000231*(float)adcValue2 - 2.5;
+				System_printf("z: %f\n", adcFloat2);
+			}
+			else {
+				System_printf("ADC Z convert failed\n");
+			}
+	    	break;
 
-		//ADC_close(adc);
-
+	    default:
+	    	System_printf("You Dun Goofed\n");
+	    	break;
+	    }
 		System_flush();
 	}
 }
 
-/*
- *  ======== taskFxn1 ========
- *  Open a ADC handle and get a array of sampling results after
- *  calling several conversions.
- */
-/*Void taskFxn1(UArg arg0, UArg arg1)
-{
-	while(1)
-	{
-		Task_sleep(200);
-		ADC_Handle   adc;
-		ADC_Params   params;
-		int_fast16_t res;
 
-		ADC_Params_init(&params);
-		adc = ADC_open(Board_ADC13, &params);
-
-		if (adc == NULL) {
-			System_abort("Error initializing ADC channel 1\n");
-		}
-
-
-
-		res = ADC_convert(adc, &adcValue1);
-
-		if (res == ADC_STATUS_SUCCESS) {
-			System_printf("y: %i\n", adcValue1);
-		}
-		else {
-			System_printf("ADC channel 13 convert failed\n");
-		}
-
-		System_flush();
-
-		ADC_close(adc);
-	}
-}
-
-Void taskFxn2(UArg arg0, UArg arg1)
-{
-	while(1)
-	{
-		Task_sleep(200);
-		ADC_Handle   adc;
-		ADC_Params   params;
-		int_fast16_t res;
-
-		ADC_Params_init(&params);
-		adc = ADC_open(Board_ADC11, &params);
-
-		if (adc == NULL) {
-			System_abort("Error initializing ADC channel 1\n");
-		}
-
-
-
-		res = ADC_convert(adc, &adcValue0);
-
-		if (res == ADC_STATUS_SUCCESS) {
-			System_printf("z: %i\n\n\n\n", adcValue0);
-		}
-		else {
-			System_printf("ADC channel 11 convert failed\n");
-		}
-
-		ADC_close(adc);
-
-		System_flush();
-	}
-}
-*/
 /*
  *  ======== main ========
  */
@@ -223,24 +213,32 @@ int main(void)
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task0Stack;
-    Task_construct(&task0Struct, (Task_FuncPtr)taskFxn0, &taskParams, NULL);
-/*
+    Task_construct(&task0Struct, (Task_FuncPtr)lcdFxn0, &taskParams, NULL);
+
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task1Stack;
-    Task_construct(&task1Struct, (Task_FuncPtr)taskFxn1, &taskParams, NULL);
+    taskParams.arg0 = Board_ADC14;
+    Task_construct(&task1Struct, (Task_FuncPtr)taskFxn0, &taskParams, NULL);
 
     Task_Params_init(&taskParams);
     taskParams.stackSize = TASKSTACKSIZE;
     taskParams.stack = &task2Stack;
-    Task_construct(&task2Struct, (Task_FuncPtr)taskFxn2, &taskParams, NULL);
-*/
+    taskParams.arg0 = Board_ADC13;
+    Task_construct(&task2Struct, (Task_FuncPtr)taskFxn0, &taskParams, NULL);
+
+    Task_Params_init(&taskParams);
+    taskParams.stackSize = TASKSTACKSIZE;
+    taskParams.stack = &task3Stack;
+    taskParams.arg0 = Board_ADC11;
+    Task_construct(&task3Struct, (Task_FuncPtr)taskFxn0, &taskParams, NULL);
+
     System_printf("Starting the ADC Single Channel example\nSystem provider is "
         "set to SysMin.  Halt the target to view any SysMin contents in ROV.\n");
 
     /* SysMin will only print to the console when you call flush or exit */
     System_flush();
-
+    GPIO_write(Board_LED0, Board_LED_OFF);
 
 
 
