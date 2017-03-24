@@ -59,6 +59,8 @@ extern "C" {
 
 #define Board_BUTTON0               MSP_EXP432P401R_S1
 #define Board_BUTTON1               MSP_EXP432P401R_S2
+#define EDUMKII_B1					EDUMKII_BUTTON1
+#define EDUMKII_B2					EDUMKII_BUTTON2
 #define Board_LED0                  MSP_EXP432P401R_LED1
 #define Board_LED1                  MSP_EXP432P401R_LED_RED
 #define Board_LED2                  MSP_EXP432P401R_LED_RED

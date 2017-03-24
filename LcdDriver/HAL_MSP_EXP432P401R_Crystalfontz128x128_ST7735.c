@@ -36,12 +36,12 @@
 //           Crystalfontz128x128 LCD with MSP-EXP432P401R LaunchPad
 //
 //*****************************************************************************
-
 #include <HAL_MSP_EXP432P401R_Crystalfontz128x128_ST7735.h>
 #include "grlib.h"
-#include "driverlib.h"
+
 #include <stdint.h>
 #include "board.h"
+
 #include <xdc/runtime/System.h>
 #include <ti/drivers/GPIO.h>
 #include <ti/drivers/SPI.h>

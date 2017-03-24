@@ -199,9 +199,13 @@ void MSP_EXP432P401R_initGeneral(void)
 GPIO_PinConfig gpioPinConfigs[] = {
     /* Input pins */
     /* MSP_EXP432P401R_S1 */
-    GPIOMSP432_P1_1 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432_P1_1 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
     /* MSP_EXP432P401R_S2 */
-    GPIOMSP432_P1_4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_RISING,
+    GPIOMSP432_P1_4 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+	/* EDUMKII Button1 J4.33 */
+	GPIOMSP432_P5_1 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
+	/* EDUMKII Button2 J4.32 */
+	GPIOMSP432_P3_5 | GPIO_CFG_IN_PU | GPIO_CFG_IN_INT_FALLING,
 
     /* Output pins */
     /* MSP_EXP432P401R_LED1 */
@@ -238,7 +242,11 @@ GPIO_CallbackFxn gpioCallbackFunctions[] = {
     /* MSP_EXP432P401R_S1 */
     NULL,
     /* MSP_EXP432P401R_S2 */
-    NULL
+    NULL,
+	/* EDUMKII_BUTTON1 */
+	NULL,
+	/* EDUMKII_BUTTON2 */
+	NULL
 };
 
 const GPIOMSP432_Config GPIOMSP432_config = {
@@ -491,11 +499,13 @@ const SPI_Config SPI_config[] = {
         .object = &spiMSP432DMAObjects[0],
         .hwAttrs = &spiMSP432DMAHWAttrs[0]
     },
+#if 0
     {
         .fxnTablePtr = &SPIMSP432DMA_fxnTable,
         .object = &spiMSP432DMAObjects[1],
         .hwAttrs = &spiMSP432DMAHWAttrs[1]
     },
+#endif
     {NULL, NULL, NULL},
 };
 
@@ -515,12 +525,13 @@ void MSP_EXP432P401R_initSPI(void)
         GPIO_PIN5 | GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P1, GPIO_PIN7,
         GPIO_PRIMARY_MODULE_FUNCTION);
-
+#if 0
     /* Configure CLK, MOSI & MISO for SPI1 (EUSCI_B2) */
     MAP_GPIO_setAsPeripheralModuleFunctionOutputPin(GPIO_PORT_P3,
         GPIO_PIN5 | GPIO_PIN6, GPIO_PRIMARY_MODULE_FUNCTION);
     MAP_GPIO_setAsPeripheralModuleFunctionInputPin(GPIO_PORT_P3, GPIO_PIN7,
         GPIO_PRIMARY_MODULE_FUNCTION);
+#endif
 
     SPI_init();
 }
